@@ -157,6 +157,7 @@ class EspeakTokenizer(Tokenizer):
 
     def g2p(self, text: str) -> List[str]:
         try:
+            text = text.lower()
             tokens = phonemize_espeak(text, self.lang)
             tokens = reduce(lambda x, y: x + y, tokens)
             return tokens

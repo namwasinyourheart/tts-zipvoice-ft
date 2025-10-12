@@ -1,0 +1,20 @@
+!python3 -m zipvoice.bin.infer_zipvoice \
+    --model-name zipvoice \
+    --checkpoint-name /media/nampv1/hdd/models/tts/zipvoice_ft/exp/zipvoice_finetune/checkpoint-4000.pt \
+    --model-dir /media/nampv1/hdd/models/tts/zipvoice_ft/exp/zipvoice_finetune \
+    --tokenizer espeak \
+    --lang vi \
+    --prompt-wav /home/nampv1/Downloads/denvau.mp3 \
+    --prompt-text "áp lực khi phải đối diện với hơn mười ngàn khán giả áp lực khi mà mình là đầu cuối của mọi công sức của. " \
+    --text "BÊN TRONG TRÁI VẢ KHI BỔ RA SẼ RỖNG CHỨ KHÔNG ĐẶC NHƯ TRÁI SUNG" \
+    --res-wav-path demo/result.wav
+
+
+--checkpoint-name /mnt/data-vol/TTS-VIVOS/exp/zipvoice_finetune/checkpoint-4000.pt \
+--checkpoint-name /mnt/models-vol/zipvoice/zipvoice/model.pt
+
+áp lực khi mà phải đối diện hơn mười ngàn khán giả, áp lực khi mà mình là đầu cuối của mọi công sức của mọi
+
+
+
+
