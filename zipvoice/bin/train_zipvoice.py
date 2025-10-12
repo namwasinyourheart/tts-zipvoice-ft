@@ -454,6 +454,9 @@ def compute_fbank_loss(
 
     batch_size, num_frames, _ = features.shape
 
+    # print("batch_size: ", batch_size)
+    # print("num_frames: ", num_frames)
+
     noise = torch.randn_like(features)  # (B, T, F)
 
     # Sampling t from uniform distribution
@@ -1108,6 +1111,105 @@ def run(rank, world_size, args):
     if world_size > 1:
         torch.distributed.barrier()
         cleanup_dist()
+
+
+
+def run_in_memory(rank, world_size, args, train_cut_set=None, dev_cut_set=None):
+    """
+    Fine-tune ZipVoice using in-memory CutSets.
+    """
+    from zipvoice.dataset.datamodule import TtsDataModule
+
+    params = get_params()
+    params.update(vars(args))
+    params.valid_interval = params.save_every_n
+
+    with open(params.model_config, "r") as f:
+        model_config = json.load(f)
+    params.update(model_config["model"])
+    params.update(model_config["feature"])
+
+    fix_random_seed(params.seed)
+    if world_size > 1:
+        setup_dist(rank, world_size, params.master_port)
+
+    os.makedirs(f"{params.exp_dir}", exist_ok=True)
+    copyfile(src=params.model_config, dst=f"{params.exp_dir}/model.json")
+    copyfile(src=params.token_file, dst=f"{params.exp_dir}/tokens.txt")
+    setup_logger(f"{params.exp_dir}/log/log-train")
+
+    if args.tensorboard and rank == 0:
+        tb_writer = SummaryWriter(log_dir=f"{params.exp_dir}/tensorboard")
+    else:
+        tb_writer = None
+
+    device = torch.device("cuda", rank) if torch.cuda.is_available() else torch.device("cpu")
+    params.device = device
+    logging.info(f"Device: {device}")
+
+    # Tokenizer
+    if params.tokenizer == "emilia":
+        tokenizer = EmiliaTokenizer(token_file=params.token_file)
+    elif params.tokenizer == "libritts":
+        tokenizer = LibriTTSTokenizer(token_file=params.token_file)
+    elif params.tokenizer == "espeak":
+        tokenizer = EspeakTokenizer(token_file=params.token_file, lang=params.lang)
+    else:
+        tokenizer = SimpleTokenizer(token_file=params.token_file)
+
+    tokenizer_config = {"vocab_size": tokenizer.vocab_size, "pad_id": tokenizer.pad_id}
+    params.update(tokenizer_config)
+
+    model = ZipVoice(**model_config["model"], **tokenizer_config)
+    if params.checkpoint is not None:
+        load_checkpoint(params.checkpoint, model=model, strict=True)
+
+    model = model.to(device)
+    if world_size > 1:
+        model = DDP(model, device_ids=[rank], find_unused_parameters=True)
+
+    optimizer = ScaledAdam(
+        get_parameter_groups_with_lrs(model, lr=params.base_lr, include_names=True),
+        lr=params.base_lr,
+        clipping_scale=2.0,
+    )
+
+    # Scheduler
+    scheduler = Eden(optimizer, params.lr_batches, params.lr_epochs)
+    scaler = create_grad_scaler(enabled=params.use_fp16)
+
+    # If no manifests provided, use in-memory CutSets
+    datamodule = TtsDataModule(args)
+    if train_cut_set is not None:
+        train_dl = datamodule.train_dataloaders(train_cut_set)
+    else:
+        train_dl = datamodule.train_dataloaders(datamodule.train_custom_cuts(params.train_manifest))
+
+    if dev_cut_set is not None:
+        valid_dl = datamodule.dev_dataloaders(dev_cut_set)
+    else:
+        # valid_dl = datamodule.dev_dataloaders(datamodule.dev_custom_cuts(params.dev_manifest))
+        valid_dl = None
+
+    # Fine-tune
+    for epoch in range(params.start_epoch, params.num_epochs + 1):
+        fix_random_seed(params.seed + epoch - 1)
+        train_dl.sampler.set_epoch(epoch - 1)
+        params.cur_epoch = epoch
+        train_one_epoch(
+            params=params,
+            model=model,
+            model_avg=None,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            train_dl=train_dl,
+            valid_dl=valid_dl,
+            scaler=scaler,
+            tb_writer=tb_writer,
+            world_size=world_size,
+            rank=rank,
+        )
+
 
 
 def main():
