@@ -8,7 +8,7 @@ router = APIRouter()
 async def tts(
     text: str,
     ref_audio: UploadFile = File(...),
-    ref_text: str = Query(...)
+    ref_text: str = Query(None)
 ):
     ref_audio_bytes = await ref_audio.read()
     return tts_infer(text, ref_audio_bytes, ref_text)

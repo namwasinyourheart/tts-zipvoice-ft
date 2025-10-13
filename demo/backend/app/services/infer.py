@@ -1,8 +1,9 @@
 import sys, os
-sys.path.append("../../../../..")
-sys.path.append("/home/nampv1/projects/tts/tts-ft/ZipVoice")
+# sys.path.append("../../../../..")
+# sys.path.append("/home/nampv1/projects/tts/tts-ft/ZipVoice")
+# sys.path.append(os.path.abspath(os.path.join(__file__, "../../../../..")))
 
-from .utils import preprocess_ref_audio_text
+
 from zipvoice.bin.infer_zipvoice import generate_sentence
 
 from app.core.config import settings
@@ -14,11 +15,22 @@ from zipvoice.utils.feature import VocosFbank
 from vocos import Vocos
 from typing import Optional
 
+from .utils import transcribe
+from .log_utils import setup_logger
+
+import torch
+
+logger = setup_logger(__name__)
+
 _model = None 
 _vocoder = None 
 _tokenizer = None 
 _feature_extractor = None 
 _sampling_rate = None 
+
+
+print(settings.dict())
+
 
 
 def get_vocoder(vocos_local_path: Optional[str] = None):
@@ -35,9 +47,8 @@ def get_vocoder(vocos_local_path: Optional[str] = None):
     return vocoder
 
 
+
 def _load_tts_model():
-    
-    
     
     model_dir = settings.MODEL_DIR
     tokens_file = os.path.join(model_dir, "base/tokens.txt")
@@ -45,9 +56,11 @@ def _load_tts_model():
 
     checkpoint_name = settings.CHECKPOINT_NAME
     
+    logger.info(f"Loading tokenizer...")
     tokenizer = EspeakTokenizer(token_file=tokens_file, lang=settings.LANG)
     tokenizer_config = {"vocab_size": tokenizer.vocab_size, "pad_id": tokenizer.pad_id}
 
+    
     with open(config_file, "r") as f:
         model_config = json.load(f)
 
@@ -57,13 +70,16 @@ def _load_tts_model():
         **tokenizer_config,
     )
 
-    
+    logger.info(f"Loading model...")
     load_checkpoint(filename=os.path.join(model_dir, checkpoint_name), model=model, strict=True)
 
     model = model.to(settings.DEVICE)
     model.eval()
 
-    vocoder = get_vocoder(None)
+    logger.info(f"Loading vocoder...")
+    vocoder_local_path = os.path.join(model_dir, settings.VOCODER_DIRNAME)
+
+    vocoder = get_vocoder(vocoder_local_path)
     vocoder = vocoder.to(settings.DEVICE)
     vocoder.eval()
 
@@ -84,20 +100,35 @@ def _ensure_model():
     global _model, _vocoder, _tokenizer, _feature_extractor, _sampling_rate
 
     if _model is None or _vocoder is None or _tokenizer is None or _feature_extractor is None or _sampling_rate is None:
+
         _model, _tokenizer, _vocoder, _feature_extractor, _sampling_rate = _load_tts_model()
     
     
 
-def tts_infer(text, ref_audio, ref_text, clip_short=True, show_info=print, device="cuda"):
+def tts_infer(text, ref_audio, ref_text, clip_short=True, show_info=print, device=settings.DEVICE):
 
     _ensure_model()
 
     # ref_audio = preprocess_ref_audio_text(ref_audio, ref_text, clip_short, show_info, device)
-    res_dir = "results"
-    os.makedirs(res_dir, exist_ok=True)
 
-    final_wav = generate_sentence(
-        "/home/nampv1/projects/tts/tts-ft/ZipVoice/demo/generated.wav",
+    # if no ref_text provided, transcribe it from ref_audio
+    logger.info("Getting ref text from ref audio...")
+    if not ref_text:
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_audio:
+            tmp_audio.write(ref_audio)
+            tmp_audio_path = tmp_audio.name
+        ref_text = transcribe(tmp_audio_path)["text"]
+        # logger.info(f"Ref text: {ref_text}")
+
+    
+    logger.info(f"Text: {text}")
+    # logger.info(f"Ref audio: {ref_audio}")
+    logger.info(f"Ref text: {ref_text}")
+
+    logger.info("Generating audio...")
+    metrics, final_wav, sampling_rate = generate_sentence(
+        "../../responses/generated.wav",
         text,
         ref_audio,
         ref_text,
@@ -108,10 +139,11 @@ def tts_infer(text, ref_audio, ref_text, clip_short=True, show_info=print, devic
         device=device,
         speed=1.0
     )
+    logger.info(f"Generated audio: {final_wav}")
     
     return {
         "audio": final_wav,
-        "sampling_rate": _sampling_rate,
+        "sampling_rate": sampling_rate,
     }
     
     

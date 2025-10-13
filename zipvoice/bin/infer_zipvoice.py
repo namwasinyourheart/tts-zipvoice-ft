@@ -618,8 +618,10 @@ def generate_sentence(
         "rtf_vocoder": rtf_vocoder,
     }
 
+    print("final_wav", final_wav)
+
     torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
-    return metrics
+    return metrics, final_wav, sampling_rate
 
 
 def generate_list(
