@@ -15,6 +15,12 @@ python3.11 python3-pip ffmpeg libsndfile1 git \
 
 WORKDIR /app
 
+RUN pip install torch==2.8.0+cu129 -f https://download.pytorch.org/whl/torch
+
+RUN pip install torchaudio==2.8.0+cu129 -f https://download.pytorch.org/whl/torchaudio
+
+RUN pip install k2==1.24.4.dev20250807+cuda12.9.torch2.8.0 -f https://k2-fsa.github.io/k2/cuda.html
+
 COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
@@ -25,7 +31,7 @@ ENV MODEL_NAME=zipvoice
 ENV MODEL_DIR="/app/models/"
 # ENV CHECKPOINT_NAME="exp/zipvoice_finetune/checkpoint-4000.pt"
 ENV CHECKPOINT_NAME="base/iter-96000-avg-2.pt"
-ENV VOCODER_DIRNAME="vocoder/models--charactr--vocos-mel-24khz/snapshots/0feb3fdd929bcd6649e0e7c5a688cf7dd012ef21"
+ENV VOCODER_DIRNAME="vocoder/charactr--vocos-mel-24khz"
 ENV TOKENIZER=espeak
 ENV LANG=vi
 ENV TOKENS_FILE="base/tokens.txt"

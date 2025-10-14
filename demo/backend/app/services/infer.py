@@ -147,3 +147,70 @@ def tts_infer(text, ref_audio, ref_text, clip_short=True, show_info=print, devic
     }
     
     
+import subprocess
+import tempfile
+import os
+
+def tts_infer(text, ref_audio, ref_text, clip_short=True, show_info=print, device=settings.DEVICE):
+    # lưu ref audio tạm
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_audio:
+        tmp_audio.write(ref_audio)
+        tmp_audio_path = tmp_audio.name
+
+    if not ref_text:
+        ref_text = transcribe(tmp_audio_path)["text"]
+
+    # ======== tự suy ra cấu trúc mới từ settings cũ ========
+    # ví dụ cũ:
+    # MODEL_DIR = "/app/models/"
+    # CHECKPOINT_NAME = "exp/zipvoice_finetune/checkpoint-4000.pt"
+    # VOCODER_DIRNAME = "vocoder/charactr--vocos-mel-24khz"
+
+    model_dir_old = settings.MODEL_DIR.rstrip("/")
+    checkpoint_path_old = settings.CHECKPOINT_NAME
+    vocoder_dirname_old = settings.VOCODER_DIRNAME
+
+    # tách checkpoint_name và model_dir mới
+    checkpoint_name = os.path.basename(checkpoint_path_old)  # "checkpoint-4000.pt"
+    model_subdir = os.path.dirname(checkpoint_path_old)      # "exp/zipvoice_finetune"
+    model_dir_new = os.path.join(model_dir_old, model_subdir)
+
+    # vocoder_path mới
+    vocoder_path = os.path.join(model_dir_old, vocoder_dirname_old)
+
+    output_wav = os.path.join("/tmp", "result.wav")
+
+    # ======== assemble command ========
+    cmd = [
+        "python3", "-m", "zipvoice.bin.infer_zipvoice",
+        "--model-name", "zipvoice",
+        "--model-dir", model_dir_new,
+        "--checkpoint-name", checkpoint_name,
+        "--vocoder-path", vocoder_path,
+        "--tokenizer", "espeak",
+        "--lang", settings.LANG,
+        "--prompt-wav", tmp_audio_path,
+        "--prompt-text", ref_text,
+        "--text", text,
+        "--res-wav-path", output_wav
+    ]
+
+    logger.info(f"Running inference: {' '.join(cmd)}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    logger.info("==== STDOUT ====")
+    logger.info(result.stdout)
+    logger.info("==== STDERR ====")
+    logger.info(result.stderr)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"ZipVoice inference failed (code {result.returncode}). See logs above.")
+
+    with open(output_wav, "rb") as f:
+        audio_bytes = f.read()
+
+    return {
+        "audio_bytes": audio_bytes,
+        "sampling_rate": 24000
+    }
+

@@ -25,7 +25,8 @@ ENV MODEL_NAME=zipvoice
 ENV MODEL_DIR="/app/models/" 
 #/media/nampv1/hdd/models/tts/zipvoice_ft/
 ENV CHECKPOINT_NAME="exp/zipvoice_finetune/checkpoint-4000.pt" 
-ENV VOCODER_DIRNAME="vocoder/models--charactr--vocos-mel-24khz/snapshots/0feb3fdd929bcd6649e0e7c5a688cf7dd012ef21"
+ENV VOCODER_DIRNAME="vocoder/charactr--vocos-mel-24khz"
+
 #base/model.pt
 ENV TOKENIZER=espeak
 ENV LANG=vi
@@ -39,15 +40,25 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "13082"]
 # sudo docker build --no-cache -t vnpost-tts-service-1.0:zipvoice .
 
 # Run docker with nvidia runtime
-sudo docker run --gpus '"device=0"' -it --rm \
+sudo docker run --gpus '"device=0"' --env VOCODER_DIRNAME=vocoder/charactr--vocos-mel-24khz -it --rm \
 -v /home/nampv1/projects/tts/tts-ft/ZipVoice/demo/backend:/app \
--v /media/nampv1/hdd/models/tts/zipvoice_ft/:/app/models \
+-v /home/nampv1/projects/tts/tts-ft/ZipVoice/demo/backend/models/:/app/models \
+-v /home/nampv1/projects/tts/tts-ft/ZipVoice/zipvoice:/app/zipvoice \
 -p 13082:13082 vnpost-tts-service-1.0:zipvoice
 
 
 sudo docker run --env DEVICE=cpu -it --rm \
 -v /home/nampv1/projects/tts/tts-ft/ZipVoice/demo/backend:/app \
--v /media/nampv1/hdd/models/tts/zipvoice_ft/:/app/models \
+-v /home/nampv1/projects/tts/tts-ft/ZipVoice/demo/backend/models/:/app/models \
 -v /home/nampv1/projects/tts/tts-ft/ZipVoice/zipvoice:/app/zipvoice \
 -p 13082:13082 vnpost-tts-service-1.0:zipvoice
+
+
+
+docker run --gpus '"device=0"' -it \
+-v /home/dmst_ai/nampv1/tts-zipvoice-ft/demo/backend:/app \
+-v /home/dmst_ai/nampv1/models/tts/zipvoice_ft/:/app/models \
+-v /home/dmst_ai/nampv1/tts-zipvoice-ft/zipvoice:/app/zipvoice \
+-p 13082:13082 vnpost-tts-service-1.0:zipvoice
+
 
