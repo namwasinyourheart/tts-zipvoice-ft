@@ -1,0 +1,51 @@
+[
+    {
+      "id": "minh_tuan-male-north",
+      "name": "Minh Tuấn",
+      "gender": "male",
+      "region": "north",
+      "path": "voices/demo_tts_saas/viettel-ai/bac-nam-podcast-1.0-tienquan_14s.mp3",
+      "description": "Giọng nam chuẩn miền Bắc, rõ ràng, trung tính."
+    },
+    {
+      "id": "lan_chi-female-north",
+      "name": "Lan Chi",
+      "gender": "female",
+      "region": "north",
+      "path": "voices/demo_tts_saas/viettel-ai/bac-nu-podcast-1.0-phuongtrang_15s.mp3",
+      "description": "Giọng nữ nhẹ nhàng, miền Bắc."
+    },
+    {
+      "id": "bao_khang-male-central",
+      "name": "Bảo Khang",
+      "gender": "male",
+      "region": "central",
+      "path": "voices/demo_tts_saas/viettel-ai/trung-nam-podcast-1.0-baoquoc_15s.mp3",
+      "description": "Giọng nam miền Trung, đặc trưng nhẹ giọng Huế."
+    },
+    {
+      "id": "ha_my-female-central",
+      "name": "Hà My",
+      "gender": "female",
+      "region": "central",
+      "path": "voices/demo_tts_saas/viettel-ai/trung-nu-podcast-1.0-maingoc_15s.mp3",
+      "description": "Giọng nữ miền Trung, tự nhiên và ấm áp."
+    },
+    {
+      "id": "tuan_kiet-male-south",
+      "name": "Tuấn Kiệt",
+      "gender": "male",
+      "region": "south",
+      "path": "voices/demo_tts_saas/vbee/saigon-nam-trungkien_18s.mp3",
+      "description": "Giọng nam miền Nam, thân thiện và dễ nghe."
+    },
+    {
+      "id": "ngoc_anh-female-south",
+      "name": "Ngọc Ánh",
+      "gender": "female",
+      "region": "south",
+      "path": "voices/demo_tts_saas/viettel-ai/nam-nu-podcast-1.0-diemy_15s",
+      "description": "Giọng nữ miền Nam, tự nhiên và trong trẻo."
+    }
+  ]
+  

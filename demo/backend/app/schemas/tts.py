@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import List, Optional, Any
+from typing import Optional
 
 class TTSRequest(BaseModel):
     text: str
-    ref_audio: bytes
+    voice: Optional[str] = "default"
     ref_text: Optional[str] = None
