@@ -1,0 +1,11 @@
+python3 -m zipvoice.bin.infer_zipvoice \
+    --model-name zipvoice \
+    --model-dir demo/backend/models/exp/zipvoice_finetune \
+    --checkpoint-name checkpoint-4000.pt \
+    --vocoder-path demo/backend/models/vocoder/charactr--vocos-mel-24khz \
+    --tokenizer espeak \
+    --lang vi \
+    --prompt-wav /home/nampv1/projects/tts/tts-ft/vnpost_tts_ft/examples/example_celeb_voices/sontungmtp.mp3 \
+    --prompt-text "áp lực khi mà phải đối diện hơn mười ngàn khán giả, áp lực khi mà mình là đầu cuối của mọi công sức của mọi" \
+    --text "Xin chào quý khách, tôi là nhân viên tổng đài hỗ trợ của công ty bưu chính." \
+    --res-wav-path draft/result.wav

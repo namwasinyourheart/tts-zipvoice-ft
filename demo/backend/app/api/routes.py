@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 
-@router.post("/tts")
+@router.post("/synthesize")
 async def tts(
     text: str = Form(...),
     ref_text: str = Form(None),

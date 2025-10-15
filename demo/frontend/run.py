@@ -16,9 +16,11 @@ env_path = Path(frontend_dir) / '.env'
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
 
+from app.config import FRONTEND_SHARE
+
 if __name__ == "__main__":
     launch_ui(
         server_name=os.getenv("FRONTEND_HOST", "0.0.0.0"),
         server_port=int(os.getenv("FRONTEND_PORT", "7861")),
-        share=os.getenv("FRONTEND_SHARE", "false").lower() == "true"
+        share=FRONTEND_SHARE,
     )

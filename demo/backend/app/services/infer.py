@@ -158,13 +158,9 @@ def tts_infer(text, ref_audio, ref_text, clip_short=True, show_info=print, devic
         tmp_audio_path = tmp_audio.name
 
     if not ref_text:
+        logger.info("Transcribing ref audio...")
         ref_text = transcribe(tmp_audio_path)["text"]
-
-    # ======== tự suy ra cấu trúc mới từ settings cũ ========
-    # ví dụ cũ:
-    # MODEL_DIR = "/app/models/"
-    # CHECKPOINT_NAME = "exp/zipvoice_finetune/checkpoint-4000.pt"
-    # VOCODER_DIRNAME = "vocoder/charactr--vocos-mel-24khz"
+        logger.info(f"Ref text: {ref_text}")
 
     model_dir_old = settings.MODEL_DIR.rstrip("/")
     checkpoint_path_old = settings.CHECKPOINT_NAME

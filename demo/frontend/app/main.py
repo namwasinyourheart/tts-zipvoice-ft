@@ -12,29 +12,65 @@ class TTSProvider:
 # --- Backend Provider ---
 class BackendTTS(TTSProvider):
     def __init__(self, api_url=None):
-        self.api_url = api_url or f"{BACKEND_URL}/api/tts"
+        self.api_url = api_url or BACKEND_URL
 
-    def generate(self, text, model="vnpost-tts-1.0", ref_audio=None, ref_text=None):
+#     def generate(self, text, model="vnpost-tts-1.0", ref_audio=None, ref_text=None):
+#         if not text:
+#             return None, "Please enter text."
+#         payload = {"text": text, "model": model}
+#         if ref_audio:
+#             payload["ref_audio"] = ref_audio
+#         if ref_text:
+#             payload["ref_text"] = ref_text
+#         try:
+#             resp = requests.post(self.api_url, json=payload, timeout=30)
+#             if resp.status_code == 200:
+#                 data = resp.json()
+#                 audio_url = data.get("audio_url")
+#                 if audio_url:
+#                     audio_resp = requests.get(f"{BACKEND_URL}{audio_url}", stream=True, timeout=30)
+#                     if audio_resp.status_code == 200:
+#                         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+#                             shutil.copyfileobj(audio_resp.raw, tmp)
+#                             return tmp.name, "Success"
+#                 return None, "Audio file not found."
+#             return None, f"Backend error: {resp.text}"
+#         except Exception as e:
+#             return None, str(e)
+
+
+    def generate(self, text, ref_audio=None, ref_text=None, model=None):
+        """
+        Gửi request đến API FastAPI /tts:
+        - text: nội dung văn bản
+        - ref_text: văn bản tham chiếu (tùy chọn)
+        - ref_audio: đường dẫn file âm thanh tham chiếu (bắt buộc)
+        """
         if not text:
             return None, "Please enter text."
-        payload = {"text": text, "model": model}
-        if ref_audio:
-            payload["ref_audio"] = ref_audio
-        if ref_text:
-            payload["ref_text"] = ref_text
+        if not ref_audio:
+            return None, "Please provide reference audio."
+
         try:
-            resp = requests.post(self.api_url, json=payload, timeout=30)
+            # Chuẩn bị dữ liệu form
+            data = {"text": text}
+            if ref_text:
+                data["ref_text"] = ref_text
+
+            # Mở file ref_audio dưới dạng binary
+            with open(ref_audio, "rb") as f:
+                files = {"ref_audio": (ref_audio, f, "audio/wav")}
+                resp = requests.post(self.api_url, data=data, files=files, timeout=60)
+
+            # Kiểm tra phản hồi
             if resp.status_code == 200:
-                data = resp.json()
-                audio_url = data.get("audio_url")
-                if audio_url:
-                    audio_resp = requests.get(f"{BACKEND_URL}{audio_url}", stream=True, timeout=30)
-                    if audio_resp.status_code == 200:
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-                            shutil.copyfileobj(audio_resp.raw, tmp)
-                            return tmp.name, "Success"
-                return None, "Audio file not found."
+                # Lưu file âm thanh tạm
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                    tmp.write(resp.content)
+                    return tmp.name, "Success"
+
             return None, f"Backend error: {resp.text}"
+
         except Exception as e:
             return None, str(e)
 
