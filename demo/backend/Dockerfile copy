@@ -47,7 +47,11 @@ sudo docker run --gpus '"device=0"' --env VOCODER_DIRNAME=vocoder/charactr--voco
 -p 13082:13082 vnpost-tts-service-1.0:zipvoice
 
 
-sudo docker run -d --env DEVICE=cpu --env CHECKPOINT_NAME=exp/zipvoice_finetune/checkpoint-4000.pt -it \
+sudo docker run -d \
+--env DEVICE=cpu \
+--env CHECKPOINT_NAME=exp/zipvoice_finetune/checkpoint-4000.pt \
+--env ASR_API_ENDPOINT=https://ai.vnpost.vn/voiceai/core/stt/v1/file \
+-it \
 -v /home/nampv1/projects/tts/tts-ft/ZipVoice/demo/backend:/app \
 -v /home/nampv1/projects/tts/tts-ft/ZipVoice/demo/backend/models/:/app/models \
 -v /home/nampv1/projects/tts/tts-ft/ZipVoice/zipvoice:/app/zipvoice \

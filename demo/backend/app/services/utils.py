@@ -1,7 +1,8 @@
 import requests
+from app.core.config import settings
 
 def transcribe(audio_path: str) -> dict:
-    ASR_API_URL = "https://ai.vnpost.vn/voiceai/asr/asr/v1/file"
+    ASR_API_URL = settings.ASR_API_ENDPOINT
 
     with open(audio_path, "rb") as f:
         files = {

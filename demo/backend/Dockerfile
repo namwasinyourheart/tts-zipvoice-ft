@@ -37,6 +37,7 @@ ENV LANG=vi
 ENV TOKENS_FILE="base/tokens.txt"
 ENV MODEL_CONFIG_FILE="base/model.json"
 ENV DEVICE=cuda
+ENV ASR_API_ENDPOINT="https://ai.vnpost.vn/voiceai/core/asr/v1/file"
 
 EXPOSE 13082
 
