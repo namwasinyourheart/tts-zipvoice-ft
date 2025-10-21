@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(tts_router, prefix="/v1")
+app.include_router(tts_router, prefix="/tts/v1")
 
 @app.get("/")
 async def hello():
